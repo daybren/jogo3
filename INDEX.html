@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Probabilidade Neon Duel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Evita zoom e scroll indesejado no mobile */
+        body {
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        /* Transições suaves para feedback de erro/acerto */
+        .bg-transition {
+            transition: all 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-black text-white h-screen w-screen flex flex-col font-sans select-none">
+
+    <!-- ================= JOGADOR 1 (CIMA - ROXO NEON) ================= -->
+    <div id="p1-container" class="flex-1 relative flex flex-col p-4 sm:p-6 rotate-180 bg-purple-950 border-b-2 border-purple-500 bg-transition overflow-hidden shadow-[inset_0_0_80px_rgba(168,85,247,0.3)]">
+        
+        <!-- Overlay de Congelamento -->
+        <div id="p1-freeze-overlay" class="hidden absolute inset-0 bg-black/90 z-20 flex-col items-center justify-center backdrop-blur-md">
+            <span class="text-purple-500 text-3xl font-bold mb-4 uppercase tracking-widest drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">Congelado! 🥶</span>
+            <span id="p1-freeze-timer" class="text-white text-8xl font-black drop-shadow-2xl">15</span>
+        </div>
+
+        <!-- Botões de Opções -->
+        <div id="p1-options" class="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-sm mx-auto mt-2">
+            <!-- Gerado via JS -->
+        </div>
+
+        <!-- Área Central da Equação e Bomba -->
+        <div class="flex-1 flex flex-col items-center justify-center w-full my-4 z-10">
+            <button id="p1-bomb-btn" onclick="useBomb(1)" class="hidden w-full max-w-sm bg-purple-900 text-white border-2 border-purple-400 text-xl font-black py-3 rounded-xl mb-4 animate-pulse uppercase shadow-[0_0_20px_rgba(168,85,247,0.8)] active:scale-95 transition-all">
+                Jogar Bomba 💣 (<span id="p1-bomb-count">0</span>)
+            </button>
+            <div id="p1-equation" class="text-white text-lg sm:text-xl font-bold drop-shadow-[0_0_5px_rgba(168,85,247,0.8)] text-center bg-black/70 border border-purple-500/50 px-5 py-4 rounded-2xl w-full max-w-sm shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                <!-- Pergunta P1 -->
+            </div>
+        </div>
+        
+        <!-- Rodapé do Jogador -->
+        <div class="w-full flex justify-between items-center pt-3 border-t border-purple-500/30 mt-auto z-10">
+            <div class="flex flex-col">
+                <span class="text-purple-300 text-lg font-bold uppercase tracking-widest drop-shadow-md">Jogador 1</span>
+                <span class="text-purple-400/70 text-sm font-medium">Vitórias: <span id="p1-wins">0</span></span>
+            </div>
+            <div class="flex items-baseline gap-1">
+                <span id="p1-score" class="text-white text-4xl sm:text-5xl font-black drop-shadow-[0_0_10px_rgba(168,85,247,0.8)]">0</span>
+                <span class="text-purple-300 font-bold text-sm">/10</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DIVISOR CENTRAL ================= -->
+    <div class="w-full h-4 bg-gray-950 flex items-center justify-center relative z-30 shadow-[0_0_20px_rgba(0,0,0,1)] border-y border-white/10">
+        <div id="round-indicator" class="absolute bg-black px-5 py-1.5 rounded-full text-white text-xs sm:text-sm font-black tracking-widest border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.5)] uppercase">
+            RODADA 1/2
+        </div>
+    </div>
+
+    <!-- ================= JOGADOR 2 (BAIXO - CIANO NEON) ================= -->
+    <div id="p2-container" class="flex-1 relative flex flex-col p-4 sm:p-6 bg-cyan-950 border-t-2 border-cyan-500 bg-transition overflow-hidden shadow-[inset_0_0_80px_rgba(6,182,212,0.3)]">
+        
+        <!-- Overlay de Congelamento -->
+        <div id="p2-freeze-overlay" class="hidden absolute inset-0 bg-black/90 z-20 flex-col items-center justify-center backdrop-blur-md">
+            <span class="text-cyan-400 text-3xl font-bold mb-4 uppercase tracking-widest drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">Congelado! 🥶</span>
+            <span id="p2-freeze-timer" class="text-white text-8xl font-black drop-shadow-2xl">15</span>
+        </div>
+
+        <!-- Botões de Opções -->
+        <div id="p2-options" class="grid grid-cols-2 gap-3 sm:gap-4 w-full max-w-sm mx-auto mt-2">
+            <!-- Gerado via JS -->
+        </div>
+
+        <!-- Área Central da Equação e Bomba -->
+        <div class="flex-1 flex flex-col items-center justify-center w-full my-4 z-10">
+            <button id="p2-bomb-btn" onclick="useBomb(2)" class="hidden w-full max-w-sm bg-cyan-900 text-white border-2 border-cyan-400 text-xl font-black py-3 rounded-xl mb-4 animate-pulse uppercase shadow-[0_0_20px_rgba(6,182,212,0.8)] active:scale-95 transition-all">
+                Jogar Bomba 💣 (<span id="p2-bomb-count">0</span>)
+            </button>
+            <div id="p2-equation" class="text-white text-lg sm:text-xl font-bold drop-shadow-[0_0_5px_rgba(6,182,212,0.8)] text-center bg-black/70 border border-cyan-500/50 px-5 py-4 rounded-2xl w-full max-w-sm shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                <!-- Pergunta P2 -->
+            </div>
+        </div>
+        
+        <!-- Rodapé do Jogador -->
+        <div class="w-full flex justify-between items-center pt-3 border-t border-cyan-500/30 mt-auto z-10">
+            <div class="flex flex-col">
+                <span class="text-cyan-300 text-lg font-bold uppercase tracking-widest drop-shadow-md">Jogador 2</span>
+                <span class="text-cyan-400/70 text-sm font-medium">Vitórias: <span id="p2-wins">0</span></span>
+            </div>
+            <div class="flex items-baseline gap-1">
+                <span id="p2-score" class="text-white text-4xl sm:text-5xl font-black drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">0</span>
+                <span class="text-cyan-300 font-bold text-sm">/10</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= TELAS DE SOBREPOSIÇÃO (OVERLAYS) ================= -->
+    
+    <!-- Fim de Rodada -->
+    <div id="round-over-overlay" class="hidden absolute inset-0 bg-black/95 z-50 flex-col items-center justify-center p-8 backdrop-blur-md">
+        <div class="bg-gray-900 p-8 rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.2)] border border-gray-700 w-full max-w-md text-center">
+            <h1 class="text-4xl font-black text-white mb-2 uppercase tracking-wider drop-shadow-md">Fim da Rodada <span id="overlay-round-num">1</span></h1>
+            <div class="py-6 mb-6">
+                <h2 id="round-winner-text" class="text-3xl font-black">Jogador X Venceu! 🎉</h2>
+            </div>
+            <button onclick="startNextRound()" class="w-full py-4 bg-yellow-500 hover:bg-yellow-600 text-black text-xl font-black rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.6)] active:scale-95 transition-all uppercase tracking-wide">
+                Próxima Rodada
+            </button>
+        </div>
+    </div>
+
+    <!-- Fim de Jogo -->
+    <div id="game-over-overlay" class="hidden absolute inset-0 bg-black/95 z-50 flex-col items-center justify-center p-8 backdrop-blur-md">
+        <div class="bg-gray-900 p-8 rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.2)] border border-gray-700 w-full max-w-md text-center">
+            <h1 class="text-4xl font-black text-white mb-6 uppercase tracking-wider drop-shadow-md">Fim de Jogo!</h1>
+            
+            <div class="flex justify-around items-center mb-8">
+                <div class="flex flex-col items-center">
+                    <span class="text-purple-500 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(168,85,247,0.8)]">Jogador 1</span>
+                    <span id="final-p1-wins" class="text-6xl font-black text-white drop-shadow-lg">0</span>
+                    <span class="text-sm text-gray-400">Vitórias</span>
+                </div>
+                <div class="text-3xl text-gray-500 font-black">X</div>
+                <div class="flex flex-col items-center">
+                    <span class="text-cyan-400 font-bold text-lg uppercase drop-shadow-[0_0_5px_rgba(6,182,212,0.8)]">Jogador 2</span>
+                    <span id="final-p2-wins" class="text-6xl font-black text-white drop-shadow-lg">0</span>
+                    <span class="text-sm text-gray-400">Vitórias</span>
+                </div>
+            </div>
+
+            <div class="py-4 mb-8 bg-gray-800 rounded-xl border border-gray-700">
+                <h2 id="game-champion-text" class="text-2xl font-black text-white">Campeão! 🏆</h2>
+            </div>
+
+            <button onclick="restartGame()" class="w-full py-4 bg-green-500 hover:bg-green-600 text-black text-xl font-bold rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.6)] active:scale-95 transition-all uppercase tracking-wide">
+                Jogar Novamente
+            </button>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+        // Estado Global do Jogo
+        const state = {
+            gameState: 'playing', // 'playing', 'round_over', 'game_over'
+            currentRound: 1,
+            p1: { queue: [], score: 0, bombs: 0, freeze: 0, wins: 0 },
+            p2: { queue: [], score: 0, bombs: 0, freeze: 0, wins: 0 }
+        };
+
+        let timerInterval;
+
+        // Banco de Dados de 30 Questões Claríssimas de Probabilidade
+        const questionBank = [
+            { q: "Sorteando um número de 1 a 100, qual a probabilidade de sair um número que termina com 0?", opts: ["10%", "1%", "20%", "50%"], ans: "10%" },
+            { q: "Jogando um dado comum (6 faces), qual a chance de sair um número par?", opts: ["50%", "33%", "25%", "16%"], ans: "50%" },
+            { q: "Jogando uma moeda comum, qual a chance de dar coroa?", opts: ["50%", "25%", "100%", "10%"], ans: "50%" },
+            { q: "Escolhendo um mês do ano ao acaso, qual a chance de começar com 'J'?", opts: ["25%", "10%", "33%", "50%"], ans: "25%" },
+            { q: "Sorteando um número de 1 a 50, qual a probabilidade de ser múltiplo de 10?", opts: ["10%", "5%", "20%", "25%"], ans: "10%" },
+            { q: "Retirando uma carta de um baralho de 52 cartas, qual a chance de ser de Copas?", opts: ["25%", "50%", "10%", "13%"], ans: "25%" },
+            { q: "Jogando um dado de 6 faces, qual a chance de sair um número maior que 4?", opts: ["33.3%", "50%", "16.6%", "25%"], ans: "33.3%" },
+            { q: "Sorteando um número de 1 a 20, qual a chance de ser um número primo?", opts: ["40%", "50%", "30%", "20%"], ans: "40%" },
+            { q: "Sorteando um dia da semana, qual a chance de ser do final de semana?", opts: ["2/7", "1/7", "3/7", "50%"], ans: "2/7" },
+            { q: "Em uma urna com 3 bolas vermelhas e 2 azuis, qual a chance de tirar uma azul?", opts: ["40%", "20%", "60%", "50%"], ans: "40%" },
+            { q: "Sorteando um número de 1 a 10, qual a chance de sair um número ímpar?", opts: ["50%", "25%", "40%", "60%"], ans: "50%" },
+            { q: "Em uma urna com 5 bolas verdes e 5 amarelas, qual a chance de sair verde?", opts: ["50%", "25%", "10%", "100%"], ans: "50%" },
+            { q: "Sorteando um número de 1 a 100, qual a chance de ser um número de apenas 1 dígito?", opts: ["9%", "10%", "1%", "5%"], ans: "9%" },
+            { q: "Sorteando um número de 1 a 30, qual a probabilidade de terminar em 5?", opts: ["10%", "5%", "15%", "20%"], ans: "10%" },
+            { q: "Escolhendo uma vogal (A,E,I,O,U) ao acaso, qual a chance de ser a letra 'A'?", opts: ["20%", "10%", "25%", "50%"], ans: "20%" },
+            { q: "Sorteando um número de 1 a 50, qual a chance de ser maior que 40?", opts: ["20%", "10%", "40%", "30%"], ans: "20%" },
+            { q: "Em 100 peças, 5 têm defeito. Qual a chance de pegar uma com defeito?", opts: ["5%", "1%", "10%", "50%"], ans: "5%" },
+            { q: "Sorteando uma letra da palavra 'PROBABILIDADE' (13 letras), chance de ser 'B'?", opts: ["2/13", "1/13", "3/13", "10%"], ans: "2/13" },
+            { q: "Escolhendo uma estação do ano, qual a chance de ser o Verão?", opts: ["25%", "50%", "33%", "10%"], ans: "25%" },
+            { q: "Em um globo de bingo (75 bolas), qual a chance da primeira bola ser a 10?", opts: ["1/75", "10%", "1/10", "1%"], ans: "1/75" },
+            { q: "Sorteando um número de 1 a 25, qual a chance de ser um quadrado perfeito (1, 4, 9...)?", opts: ["20%", "10%", "25%", "30%"], ans: "20%" },
+            { q: "Jogando um dado de 6 faces, qual a chance de sair um múltiplo de 3?", opts: ["33.3%", "16.6%", "50%", "25%"], ans: "33.3%" },
+            { q: "Sorteando um número de 1 a 100, qual a chance do número ser exatamente 50?", opts: ["1%", "2%", "50%", "10%"], ans: "1%" },
+            { q: "Sorteando um número par entre 2 e 10 (2,4,6,8,10), qual a chance de ser o 8?", opts: ["20%", "10%", "25%", "40%"], ans: "20%" },
+            { q: "Qual a probabilidade de tirar um Ás em um baralho comum de 52 cartas?", opts: ["1/13", "4%", "10%", "1/52"], ans: "1/13" },
+            { q: "Sorteando um número de 1 a 10, qual a chance de ser menor que 4?", opts: ["30%", "25%", "40%", "33%"], ans: "30%" },
+            { q: "Em uma turma de 20 alunos com 12 meninas, qual a chance de sortear um menino?", opts: ["40%", "60%", "8%", "20%"], ans: "40%" },
+            { q: "Qual a probabilidade de obter Cara E Coroa em 2 lançamentos de moeda (ordem não importa)?", opts: ["50%", "25%", "75%", "33%"], ans: "50%" },
+            { q: "Jogando dois dados de 6 faces, qual a chance de saírem números iguais?", opts: ["1/6", "1/12", "1/36", "50%"], ans: "1/6" },
+            { q: "Sorteando um número de 1 a 100, qual a chance de começar com o dígito 1?", opts: ["11%", "10%", "1%", "20%"], ans: "11%" }
+        ];
+
+        // Gera o baralho embaralhado com opções aleatórias
+        const generateDeck = (size) => {
+            // Embaralha o banco principal e pega 'size' perguntas
+            const shuffledBank = [...questionBank].sort(() => Math.random() - 0.5).slice(0, size);
+            
+            return shuffledBank.map(q => {
+                // Embaralha as 4 opções dessa pergunta
+                const shuffledOpts = [...q.opts].sort(() => Math.random() - 0.5);
+                return {
+                    questionStr: q.q,
+                    options: shuffledOpts,
+                    correctStr: q.ans
+                };
+            });
+        };
+
+        // Inicialização de Rodada e Jogo
+        const initRound = () => {
+            state.p1.queue = generateDeck(10);
+            state.p2.queue = generateDeck(10);
+            state.p1.score = 0;
+            state.p2.score = 0;
+            state.p1.bombs = 0;
+            state.p2.bombs = 0;
+            state.p1.freeze = 0;
+            state.p2.freeze = 0;
+            state.gameState = 'playing';
+
+            document.getElementById('round-over-overlay').style.display = 'none';
+            document.getElementById('game-over-overlay').style.display = 'none';
+            
+            updateUI();
+            startTimer();
+        };
+
+        const restartGame = () => {
+            state.currentRound = 1;
+            state.p1.wins = 0;
+            state.p2.wins = 0;
+            initRound();
+        };
+
+        const startNextRound = () => {
+            state.currentRound = 2;
+            initRound();
+        };
+
+        // Lógica de Timer para o Congelamento (Bomba)
+        const startTimer = () => {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (state.gameState !== 'playing') return;
+                
+                let updated = false;
+                if (state.p1.freeze > 0) { state.p1.freeze--; updated = true; }
+                if (state.p2.freeze > 0) { state.p2.freeze--; updated = true; }
+                
+                if (updated) updateUI();
+            }, 1000);
+        };
+
+        // Lógica de Fim de Rodada
+        const handleRoundEnd = (winner) => {
+            state.gameState = 'ended';
+            clearInterval(timerInterval);
+
+            if (winner === 1) state.p1.wins++;
+            else if (winner === 2) state.p2.wins++;
+
+            updateUI(); // Atualiza contador de vitórias
+
+            if (state.currentRound >= 2) {
+                // Fim de Jogo
+                document.getElementById('final-p1-wins').innerText = state.p1.wins;
+                document.getElementById('final-p2-wins').innerText = state.p2.wins;
+                
+                const champText = document.getElementById('game-champion-text');
+                if (state.p1.wins > state.p2.wins) {
+                    champText.innerHTML = '<span class="text-purple-500 drop-shadow-[0_0_5px_purple]">Jogador 1 Campeão! 🏆</span>';
+                } else if (state.p2.wins > state.p1.wins) {
+                    champText.innerHTML = '<span class="text-cyan-400 drop-shadow-[0_0_5px_cyan]">Jogador 2 Campeão! 🏆</span>';
+                } else {
+                    champText.innerHTML = '<span class="text-yellow-500 drop-shadow-[0_0_5px_yellow]">Empate Histórico! 🤝</span>';
+                }
+                
+                document.getElementById('game-over-overlay').style.display = 'flex';
+            } else {
+                // Fim de Rodada
+                document.getElementById('overlay-round-num').innerText = state.currentRound;
+                const roundWinnerText = document.getElementById('round-winner-text');
+                if (winner === 1) {
+                    roundWinnerText.innerHTML = '<span class="text-purple-500 drop-shadow-[0_0_8px_purple]">Jogador 1 Venceu! 🎉</span>';
+                } else {
+                    roundWinnerText.innerHTML = '<span class="text-cyan-400 drop-shadow-[0_0_8px_cyan]">Jogador 2 Venceu! 🎉</span>';
+                }
+                document.getElementById('round-over-overlay').style.display = 'flex';
+            }
+        };
+
+        // Ação de Responder (Tocar na opção)
+        const handleTap = (playerNum, optIndex) => {
+            if (state.gameState !== 'playing') return;
+            
+            const player = playerNum === 1 ? state.p1 : state.p2;
+            const isP1 = playerNum === 1;
+
+            if (player.freeze > 0) return; // Congelado não joga
+            if (player.queue.length === 0) return;
+
+            const currentQ = player.queue[0];
+            const chosenOpt = currentQ.options[optIndex];
+            const isCorrect = chosenOpt === currentQ.correctStr;
+
+            // Feedback Visual (Cor de fundo pisca estilo neon)
+            const container = document.getElementById(`p${playerNum}-container`);
+            const originalColor = isP1 ? 'bg-purple-950' : 'bg-cyan-950';
+            const wrongColor = isP1 ? 'bg-red-950' : 'bg-red-950'; // Erro fica meio avermelhado
+            const rightColor = 'bg-green-900';
+
+            container.classList.remove(originalColor);
+            container.classList.add(isCorrect ? rightColor : wrongColor);
+            setTimeout(() => {
+                container.classList.remove(isCorrect ? rightColor : wrongColor);
+                container.classList.add(originalColor);
+            }, 200);
+
+            const answeredQ = player.queue.shift(); // Remove a pergunta atual
+
+            if (isCorrect) {
+                player.score++;
+                if (player.score % 2 === 0) player.bombs++; // Ganha bomba a cada 2 acertos
+                if (player.score >= 10) {
+                    handleRoundEnd(playerNum);
+                    return;
+                }
+            } else {
+                // Se errou, a pergunta volta para o fim do baralho
+                player.queue.push(answeredQ);
+            }
+
+            updateUI();
+        };
+
+        // Ação de Jogar a Bomba
+        const useBomb = (playerNum) => {
+            const player = playerNum === 1 ? state.p1 : state.p2;
+            const opponent = playerNum === 1 ? state.p2 : state.p1;
+
+            if (player.bombs > 0 && player.freeze === 0) {
+                player.bombs--;
+                opponent.freeze = 15; // Congela oponente por 15s
+                updateUI();
+            }
+        };
+
+        // Atualização Geral da Interface
+        const updateUI = () => {
+            document.getElementById('round-indicator').innerText = `RODADA ${state.currentRound}/2`;
+
+            const renderPlayer = (pNum, pState, pColor) => {
+                // Placar e Vitórias
+                document.getElementById(`p${pNum}-score`).innerText = pState.score;
+                document.getElementById(`p${pNum}-wins`).innerText = pState.wins;
+
+                // Congelamento
+                const freezeOverlay = document.getElementById(`p${pNum}-freeze-overlay`);
+                if (pState.freeze > 0) {
+                    freezeOverlay.style.display = 'flex';
+                    document.getElementById(`p${pNum}-freeze-timer`).innerText = pState.freeze;
+                } else {
+                    freezeOverlay.style.display = 'none';
+                }
+
+                // Bomba
+                const bombBtn = document.getElementById(`p${pNum}-bomb-btn`);
+                if (pState.bombs > 0 && pState.freeze === 0) {
+                    bombBtn.style.display = 'block';
+                    document.getElementById(`p${pNum}-bomb-count`).innerText = pState.bombs;
+                } else {
+                    bombBtn.style.display = 'none';
+                }
+
+                // Pergunta Atual e Opções
+                const equationEl = document.getElementById(`p${pNum}-equation`);
+                const optionsContainer = document.getElementById(`p${pNum}-options`);
+                
+                if (pState.queue.length > 0) {
+                    const currentQ = pState.queue[0];
+                    equationEl.innerText = currentQ.questionStr;
+                    
+                    optionsContainer.innerHTML = ''; // Limpa opções antigas
+
+                    currentQ.options.forEach((opt, index) => {
+                        const btn = document.createElement('button');
+                        // Botões com estilo Neon Neumorphic adaptado para texto longo
+                        const colorClass = pNum === 1 ? 'text-purple-300 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.2)] hover:bg-purple-900/50' : 'text-cyan-300 border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)] hover:bg-cyan-900/50';
+                        btn.className = `bg-gray-900 border ${colorClass} active:bg-white active:text-black text-sm sm:text-base md:text-lg font-bold py-4 px-2 rounded-xl active:scale-95 transition-all flex items-center justify-center text-center leading-tight`;
+                        btn.innerText = opt;
+                        
+                        // Evita o evento de clique padrão do touch gerando 'ghost clicks'
+                        btn.onpointerdown = (e) => {
+                            e.preventDefault();
+                            handleTap(pNum, index);
+                        };
+                        optionsContainer.appendChild(btn);
+                    });
+                }
+            };
+
+            renderPlayer(1, state.p1, 'purple');
+            renderPlayer(2, state.p2, 'cyan');
+        };
+
+        // Inicia o jogo ao carregar a página
+        window.onload = restartGame;
+
+    </script>
+</body>
+</html>
